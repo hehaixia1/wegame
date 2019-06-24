@@ -66,7 +66,7 @@ EntityBase{
                 return "../../assets/fruits/Orange.png"
             else if(type == 3)
                 return "../../assets/fruits/Pear.png"
-            else
+            else if(type == 4)
                 return "../../assets/fruits/BlueBerry.png"
 
         }

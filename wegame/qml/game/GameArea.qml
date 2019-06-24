@@ -8,7 +8,7 @@ Item {
     id: gameArea
     width: blockSize * 8
     height: blockSize * 12
-
+    property int flag: 1
     property double blockSize
     property int rows:Math.floor(height/blockSize)
     property int columns:Math.floor(width/blockSize)
@@ -38,7 +38,7 @@ Item {
     function initializeField(){
 
         gameArea.clicks = 0
-        gameArea.maxTypes = 3
+        gameArea.maxTypes = 4
 
         //清栏
          clearField()
@@ -68,7 +68,7 @@ Item {
             x:column * blockSize,
             y:row * blockSize,
 
-            type:Math.floor(Math.random() *  gameArea.maxTypes),// 水果随机产生
+            type:chcek(),// 水果随机产生
             row:row,
             column:column
         }
@@ -83,6 +83,19 @@ Item {
 
         return entity
     }
+    function chcek(){
+           if(clicks%10==9)flag=1
+          if(flag==1 && clicks%10==0){
+                flag=0
+                return 4
+          }
+          else
+              return Math.floor(Math.random() * gameArea.maxTypes)
+
+      }
+
+
+
     //用户点击处理
     function handleClick(row,column,type){
         if(!isFieldReadyForNewBlockRemoval())
@@ -108,7 +121,7 @@ Item {
             //增加游戏难度
 
             gameArea.clicks++
-            if((gameArea.maxTypes < 5) && (gameArea.clicks % 10 == 0))
+            if((gameArea.maxTypes < 4) && (gameArea.clicks % 10 == 0))
                 gameArea.maxTypes++
         }
 
