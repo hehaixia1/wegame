@@ -68,8 +68,7 @@ EntityBase{
                 return "../../assets/fruits/Pear.png"
             else
                 return "../../assets/fruits/BlueBerry.png"
-//            else
-//                return "../../assets/fruits/ Lemon.png"
+
         }
     }
     MouseArea{

@@ -178,27 +178,100 @@ Item {
     }
 
     //返回需要消去水果块数
-    //实现的是消去水果的逻辑
-    function getNumberOfConnectedBlocks(fieldCopy,row,column,type){
-        if(row >= rows || column >= columns || row < 0 || column < 0)
-            return 0
-        var block= fieldCopy[index(row,column)]
+    function getNumberOfConnectedBlocks(fieldCopy, row, column, type) {
+       if(row >= rows || column >= columns || row < 0 || column < 0)
+         return 0
+       var block = fieldCopy[index(row, column)]
+       if(block === null)
+         return 0
+      else if(block.type !==type)
+         return 0
+       if(block.type>5)
+       return 0
+       var count = 1
+       fieldCopy[index(row, column)] = null
 
-        if(block === null)
-            return 0
-        if(block.type !==type)
-            return 0
-        var count = 1
+       if(block.type===4){
+           count += getNumberOfConnectedBlocks1(fieldCopy, row, column, type)
 
-        fieldCopy[index(row,column)] = null
+           count += getNumberOfConnectedBlocks2(fieldCopy, row, column , type)
 
-        count += getNumberOfConnectedBlocks(fieldCopy,row + 1,column,type)
-        count += getNumberOfConnectedBlocks(fieldCopy,row,column + 1,type)
-        count +=getNumberOfConnectedBlocks(fieldCopy,row - 1,column,type)
-        count +=getNumberOfConnectedBlocks(fieldCopy,row,column - 1,type)
+           count += getNumberOfConnectedBlocks3(fieldCopy, row, column , type)
 
-        return count
-    }
+           count += getNumberOfConnectedBlocks4(fieldCopy, row, column , type)
+
+       }
+       else{
+       count += getNumberOfConnectedBlocks(fieldCopy, row + 1, column, type)
+       count += getNumberOfConnectedBlocks(fieldCopy, row, column + 1, type)
+       count += getNumberOfConnectedBlocks(fieldCopy, row - 1, column, type)
+       count += getNumberOfConnectedBlocks(fieldCopy, row, column - 1, type)
+       }
+
+           return count
+     }
+     function getNumberOfConnectedBlocks1(fieldCopy, row, column, type) {
+       if(row >= rows || column >= columns || row < 0 || column < 0)
+         return 0
+       var block = fieldCopy[index(row, column)]
+       var count = 1
+       fieldCopy[index(row, column)] = null
+       count += getNumberOfConnectedBlocks1(fieldCopy, row - 1, column, type)
+        console.log(count)
+       return count
+     }
+     function getNumberOfConnectedBlocks2(fieldCopy, row, column, type) {
+       if(row >= rows || column >= columns || row < 0 || column < 0)
+         return 0
+       var block = fieldCopy[index(row, column)]
+       var count = 1
+       fieldCopy[index(row, column)] = null
+
+       count += getNumberOfConnectedBlocks2(fieldCopy, row + 1, column , type)
+    console.log(count)
+       return count
+     }
+     function getNumberOfConnectedBlocks3(fieldCopy, row, column, type) {
+       if(row >= rows || column >= columns || row < 0 || column < 0)
+         return 0
+       var block = fieldCopy[index(row, column)]
+       var count = 1
+       fieldCopy[index(row, column)] = null
+       count += getNumberOfConnectedBlocks3(fieldCopy, row, column + 1, type)
+        console.log(count)
+       return count
+     }
+     function getNumberOfConnectedBlocks4(fieldCopy, row, column, type) {
+       if(row >= rows || column >= columns || row < 0 || column < 0)
+         return 0
+       var block = fieldCopy[index(row, column)]
+       var count = 1
+       fieldCopy[index(row, column)] = null
+       count += getNumberOfConnectedBlocks4(fieldCopy, row, column - 1, type)
+       console.log(count)
+       return count
+     }
+//    //实现的是消去水果的逻辑
+//    function getNumberOfConnectedBlocks(fieldCopy,row,column,type){
+//        if(row >= rows || column >= columns || row < 0 || column < 0)
+//            return 0
+//        var block= fieldCopy[index(row,column)]
+
+//        if(block === null)
+//            return 0
+//        if(block.type !==type)
+//            return 0
+//        var count = 1
+
+//        fieldCopy[index(row,column)] = null
+
+//        count += getNumberOfConnectedBlocks(fieldCopy,row + 1,column,type)
+//        count += getNumberOfConnectedBlocks(fieldCopy,row,column + 1,type)
+//        count +=getNumberOfConnectedBlocks(fieldCopy,row - 1,column,type)
+//        count +=getNumberOfConnectedBlocks(fieldCopy,row,column - 1,type)
+
+//        return count
+//    }
     //删除以前标记的块
     function removeConnectedBlocks(fieldCopy){
         for(var i = 0;i < fieldCopy.length;i++){
