@@ -1,5 +1,7 @@
 # allows to add DEPLOYMENTFOLDERS and links to the Felgo library and QtCreator auto-completion
 CONFIG += felgo
+#json所加
+CONFIG += c++11
 
 # uncomment this line to add the Live Client Module and use live reloading with your custom C++ code
 # for the remaining steps to build a custom Live Code Reload app see here: https://felgo.com/custom-code-reload-app/
@@ -38,7 +40,8 @@ RESOURCES += #    resources.qrc # uncomment for publishing
 
 
 # The .cpp file which was generated for your project. Feel free to hack it.
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    gamescore.cpp
 
 
 android {
@@ -60,8 +63,16 @@ macx {
 }
 
 DISTFILES += \
-    qml/Block.qml \
-    qml/Button.qml \
-    qml/GameArea.qml \
-    qml/GameOverWindow.qml \
-    qml/TitleWindow.qml
+    qml/game/Block.qml \
+    qml/game/Button.qml \
+    qml/game/GameArea.qml \
+    qml/game/GameOverWindow.qml \
+    qml/scenes/BaseScene.qml \
+    qml/scenes/GameScene.qml \
+    qml/scenes/TitleScene.qml \
+    qml/scenes/SettingScene.qml \
+    qml/game/GameSound.qml \
+    qml/game/ToggleButton.qml
+
+HEADERS += \
+    gamescore.h

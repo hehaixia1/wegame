@@ -7,25 +7,21 @@ Item {
     height: 100
 
     property string text
-
     signal clicked()
 
-    Image{
-        source: "../../assets/ButtonBG.png"
-        anchors.fill: parent
-
-    }
     Text{
-        //font.family: gameFont.name
-        font.pixelSize: 20
-        color: "red"
+        font.family: gameFont.name
+        color: "white"
         text:button.text
-
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-    }
+
+
+
     MouseArea{
         anchors.fill: parent
         onClicked: button.clicked()
+        }
     }
+
 }

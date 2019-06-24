@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <FelgoApplication>
-
+#include "gamescore.h"
 #include <QQmlApplicationEngine>
 
 
@@ -10,6 +10,11 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     FelgoApplication felgo;
+
+    //注册类
+
+    //模块名，版本号,组建名
+    qmlRegisterType<GameScore>("GameScoreType",1,0,"GameScore");
 
     // QQmlApplicationEngine is the preferred way to start qml projects since Qt 5.2
     // if you have older projects using Qt App wizards from previous QtCreator versions than 3.1, please change them to QQmlApplicationEngine

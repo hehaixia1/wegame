@@ -59,17 +59,17 @@ EntityBase{
         anchors.fill:parent
         source: {
             if(type == 0)
-                return "../../assets/Apple.png"
+                return "../../assets/fruits/Apple.png"
             else if(type == 1)
-                return "../../assets/Banana.png"
+                return "../../assets/fruits/Banana.png"
             else if(type == 2)
-                return "../../assets/Orange.png"
+                return "../../assets/fruits/Orange.png"
             else if(type == 3)
-                return "../../assets/Pear.png"
+                return "../../assets/fruits/Pear.png"
             else if(type == 4)
-                return "../../assets/BlueBerry.png"
+                return "../../assets/fruits/BlueBerry.png"
             else
-                return "../../assets/Lemon.png"
+                return "../../assets/fruits/Lemon.png"
         }
     }
     MouseArea{

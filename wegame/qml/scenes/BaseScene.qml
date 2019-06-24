@@ -5,8 +5,8 @@ import QtQuick 2.0
 
 Scene{
     id:scene
-    height:960
-    width: 640
+    height:480
+    width: 320
 
     opacity: 0
     visible: opacity > 0

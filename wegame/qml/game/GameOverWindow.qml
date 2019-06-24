@@ -25,6 +25,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         y:72
     }
+
     Text{
         font.family: gameFont.name
         font.pixelSize: 15

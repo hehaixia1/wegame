@@ -1,10 +1,11 @@
 import Felgo 3.0
 import QtQuick 2.0
 
+
 Item {
 
 
-    id: gameWindow
+    id: item
     width: blockSize * 8
     height: blockSize * 12
 
@@ -17,6 +18,7 @@ Item {
     property int maxTypes
     property int clicks
 
+
     signal gameOver()
 
     //淡入/淡出动画
@@ -24,16 +26,20 @@ Item {
         NumberAnimation {duration: 400 }
     }
 
+
+    //计算字段索引
     function index(row,column)
     {
         return row * columns + column
     }
 
+    //对游戏场景初始化
     function initializeField(){
 
         gameArea.clicks = 0
         gameArea.maxTypes = 3
 
+        //清栏
          clearField()
 
         for(var i =0;i < rows;i++){
@@ -42,6 +48,8 @@ Item {
             }
         }
     }
+
+    // 清除游戏场地
     function clearField(){
         for(var i = 0;i <gameArea.field.length;i++){
             var block = gameArea.field[i]
@@ -51,7 +59,7 @@ Item {
         }
         gameArea.field = []
     }
-
+    //产生实体块
     function createBlock(row,column){
         var entityProperties = {
             width:blockSize,
@@ -72,7 +80,7 @@ Item {
 
         return entity
     }
-
+    //用户点击处理
     function handleClick(row,column,type){
         if(!isFieldReadyForNewBlockRemoval())
             return
@@ -86,6 +94,12 @@ Item {
             var score = blockCount * (blockCount + 1) / 2
             scene.score +=score
 
+            gameScore.score=scene.score
+            console.log(gameScore.score)
+            gameScore.save()
+            if(!gameScore.save()){
+               console.log("YES")
+            }
             if(isGameOver())
                 gameOver()
 
@@ -97,7 +111,7 @@ Item {
         }
 
     }
-
+    //
     function isFieldReadyForNewBlockRemoval(){
         for(var col = 0; col < columns;col++){
             var block = field[index(0,col)]
@@ -130,7 +144,7 @@ Item {
         return gameOver
     }
 
-
+    //将剩余的块移到底部，用新的块填充列
     function moveBlocksToBottom(){
         for(var col = 0; col < columns;col++){
             for(var row = rows - 1;row >= 0;row--){
@@ -183,17 +197,26 @@ Item {
 
         return count
     }
-
+    //删除以前标记的块
     function removeConnectedBlocks(fieldCopy){
         for(var i = 0;i < fieldCopy.length;i++){
             if(fieldCopy[i] === null){
                 var block = gameArea.field[i]
                 if(block !== null){
+
                     gameArea.field[i] = null
                     entityManager.removeEntityById(block.entityId)
+
+
                 }
+
+
             }
+
         }
+
+
+
     }
 
 }
