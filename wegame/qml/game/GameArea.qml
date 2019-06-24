@@ -5,7 +5,7 @@ import QtQuick 2.0
 Item {
 
 
-    id: item
+    id: gameArea
     width: blockSize * 8
     height: blockSize * 12
 
@@ -15,6 +15,7 @@ Item {
 
     property var field:[]
 
+    //增加难度的相关参数
     property int maxTypes
     property int clicks
 
@@ -59,7 +60,7 @@ Item {
         }
         gameArea.field = []
     }
-    //产生实体块
+    //产生实体块在指定位置
     function createBlock(row,column){
         var entityProperties = {
             width:blockSize,
@@ -72,9 +73,11 @@ Item {
             column:column
         }
 
+        //增加实体块到界面
         var id  =  entityManager.createEntityFromUrlWithProperties(
                     Qt.resolvedUrl("Block.qml"),entityProperties)
 
+        //此字符串属性持有实体的唯一标识符
         var entity = entityManager.getEntityById(id)
         entity.clicked.connect(handleClick)
 
@@ -91,22 +94,21 @@ Item {
             //此函数是把高处的块向下移动
             moveBlocksToBottom()
             //消去一次的分素
+
             var score = blockCount * (blockCount + 1) / 2
             scene.score +=score
 
+            //游戏分数的存储
             gameScore.score=scene.score
-            console.log(gameScore.score)
             gameScore.save()
-            if(!gameScore.save()){
-               console.log("YES")
-            }
+
             if(isGameOver())
                 gameOver()
 
             //增加游戏难度
 
             gameArea.clicks++
-            if((gameArea.maxTypes < 6) && (gameArea.clicks % 10 == 0))
+            if((gameArea.maxTypes < 5) && (gameArea.clicks % 10 == 0))
                 gameArea.maxTypes++
         }
 

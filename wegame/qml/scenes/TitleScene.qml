@@ -5,10 +5,12 @@ import "../game"
 
 BaseScene{
 
-    id: scene
+    id: titlescene
 
     signal playClicked()
     signal settingClicked()
+    signal listClicekd()
+    signal gameContinueClicked()
     Behavior on opacity {
         NumberAnimation {duration: 400 }
     }
@@ -37,14 +39,20 @@ BaseScene{
         text: "继续游戏"
         anchors.horizontalCenter: ground.horizontalCenter
         anchors.top:play.bottom
+        onClicked: gameContinueClicked()
     }
 
     Button{
         id:button2
         width: 160; height: 50
-        text: "排行榜"
+        text: "成就榜"
         anchors.horizontalCenter: ground.horizontalCenter
         anchors.top: button1.bottom
+        onClicked: {
+            gameScore.load()
+            console.log(gameScore.score)
+            listClicekd()
+        }
     }
 
     Button{

@@ -8,7 +8,7 @@ import "../game"
 BaseScene{
     id:settingScene
 
-    signal titleScene1()
+    signal titleScene()
     Image{
         id:background
         source:"../../assets/title/BG1.jpg"
@@ -16,7 +16,7 @@ BaseScene{
         scale: 0.5
     }
     Image{
-        id:home
+        id:settohome
         width: 20
         height: 20
         source: "../../assets/list/icon-back.png"
@@ -26,7 +26,7 @@ BaseScene{
 
         MouseArea{
             anchors.fill:parent
-            onClicked:titleScene1()
+            onClicked:titleScene()
         }
     }
 

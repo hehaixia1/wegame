@@ -4,7 +4,7 @@ import QtQuick 2.0
 // EMPTY SCENE
 
 Scene{
-    id:scene
+    id:basescene
     height:480
     width: 320
 

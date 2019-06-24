@@ -67,12 +67,13 @@ DISTFILES += \
     qml/game/Button.qml \
     qml/game/GameArea.qml \
     qml/game/GameOverWindow.qml \
+    qml/game/GameSound.qml \
+    qml/game/ToggleButton.qml \
     qml/scenes/BaseScene.qml \
     qml/scenes/GameScene.qml \
-    qml/scenes/TitleScene.qml \
     qml/scenes/SettingScene.qml \
-    qml/game/GameSound.qml \
-    qml/game/ToggleButton.qml
+    qml/scenes/TitleScene.qml \
+    qml/game/GameContinue.qml
 
 HEADERS += \
     gamescore.h

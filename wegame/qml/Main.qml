@@ -22,6 +22,15 @@ GameWindow{
         entityContainer: gameScene
 
     }
+    //分数存取
+    GameScore{
+        id:gameScore
+    }
+    //继续游戏组件
+    GameContinue{
+        id:gameContinue
+    }
+
        //主界面
     TitleScene{
         id:titleWindow
@@ -34,6 +43,17 @@ GameWindow{
         onSettingClicked: {
             gameWindow.state = "setting"
         }
+        //排行榜信号处理器
+        onListClicekd: {
+            gameWindow.state = "list"
+        }
+        //继续游戏信号处理器
+        onGameContinueClicked : {
+                gameWindow.state = "game"
+                gameScene.readstart()
+
+            }
+
     }
 
     //游戏界面
@@ -44,10 +64,18 @@ GameWindow{
         }
     }
 
+    //排行榜
+    ListScene{
+        id:listscene
+        onListScene: {
+            gameWindow.state = "title"
+        }
+    }
+
     //设置界面
     SettingScene{
         id:settingScene
-        onTitleScene1 : {
+        onTitleScene : {
             gameWindow.state = "backhome"
             gameScene.startGame()
         }
@@ -82,6 +110,13 @@ GameWindow{
             name:"setting"
             PropertyChanges{
                 target:settingScene
+                opacity:1
+            }
+        },
+        State{
+            name:"list"
+            PropertyChanges{
+                target:listscene
                 opacity:1
             }
         }

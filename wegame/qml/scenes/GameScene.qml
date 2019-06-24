@@ -4,6 +4,7 @@ import GameScoreType 1.0
 import "../game"
 
 BaseScene{
+
     id:scene
     width:320
     height:480
@@ -17,6 +18,10 @@ BaseScene{
     //申请一个组件
     GameScore{
         id:gameScore
+    }
+
+    GameSound{
+        id:gameSound
     }
 
     //实体控制
@@ -35,12 +40,8 @@ BaseScene{
     BackgroundMusic{
     source: "../../assets/music/BG.mp3"
     autoPlay: true
-
-
-}
-    GameSound{
-        id:gameSound
     }
+
 
     Image{
         id:grid
@@ -99,12 +100,21 @@ BaseScene{
     }
 
 
-
+    //重新开始游戏
     function startGame(){
         gameOverWindow.hide()
         gameArea.initializeField()
         scene.score = 0
     }
+
+    //读取游戏
+    function readstart(){
+        gameOverWindow.hide()
+        gameArea.initializeField()
+        scene.score = gameScore.score
+    }
+
+    //返回主页面
     function startTitle(){
         scene.hide()
         TitleScene.show()
