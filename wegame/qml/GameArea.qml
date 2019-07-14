@@ -2,70 +2,125 @@ import Felgo 3.0
 import QtQuick 2.0
 
 Item {
-
-
     id: gameArea
+
     width: blockSize * 8
     height: blockSize * 12
 
+
     property double blockSize
-    property int rows:Math.floor(height/blockSize)
-    property int columns:Math.floor(width/blockSize)
+    property int rows: Math.floor(height / blockSize)
+    property int columns: Math.floor(width / blockSize)
 
-    property var field:[]
 
-    property int maxTypes
-    property int clicks
+    property int maxTypes: 12
+    property int types
+    property var imageNumber: [7, 7, 8, 7, 7, 8, 7, 7, 7, 7, 7, 7]
 
-    signal gameOver()
 
-    //淡入/淡出动画
-    Behavior on opacity {
-        NumberAnimation {duration: 400 }
+    property var field: []
+    property var link: [99, 99]
+    property int linkIndex: 0
+    property int linelevel: 0
+    property var point: []
+    property var lucky: []
+    property var chanceLink: []
+
+    // gameover signal
+    signal gameOver
+    signal pairingSuccess(int level)
+    signal initialize
+    signal chance
+    signal calculatescore(int totalscore, int levell)
+
+    Rectangle {
+        id: rectangle
+        color: "yellow"
+        opacity: 0
+    }
+    Rectangle {
+        id: rectangle2
+        color: "yellow"
+        opacity: 0
+    }
+    Rectangle {
+        id: rectangle3
+        color: "yellow"
+        opacity: 0
     }
 
-    function index(row,column)
-    {
+    Timer {
+        id: timer
+        interval: 400
+        running: true
+        repeat: true
+        onTriggered: {
+            rectangle.opacity = 0
+            rectangle2.opacity = 0
+            rectangle3.opacity = 0
+        }
+    }
+
+
+    function index(row, column) {
         return row * columns + column
     }
 
-    function initializeField(){
 
-        gameArea.clicks = 0
-        gameArea.maxTypes = 3
+    function initializeField(varietyy) {
 
-         clearField()
+        gameArea.types = 12
+        gameArea.imageNumber = [7, 7, 8, 7, 7, 8, 7, 7, 7, 7, 7, 7]
 
-        for(var i =0;i < rows;i++){
-            for(var j =0;j <columns;j++){
-                gameArea.field[index(i,j)] = createBlock(i,j)
+        gameArea.lucky = [Math.floor(Math.random(
+                                         ) * gameArea.rows * gameArea.columns), Math.floor(Math.random() * gameArea.rows * gameArea.columns), Math.floor(Math.random() * gameArea.rows * gameArea.columns)]
+
+        clearField()
+
+
+        for (var i = 0; i < rows; i++) {
+            for (var j = 0; j < columns; j++) {
+                if (i === j || (rows - i) === (columns - j)) {
+                    gameArea.field[index(i, j)] = null
+                } else {
+                    gameArea.field[index(i, j)] = createBlock(i, j, varietyy)
+                }
             }
         }
+        initialize()
     }
-    function clearField(){
-        for(var i = 0;i <gameArea.field.length;i++){
+
+
+    function clearField() {
+
+        for (var i = 0; i < gameArea.field.length; i++) {
             var block = gameArea.field[i]
-            if(block !== null){
+            if (block !== null) {
                 entityManager.removeEntityById(block.entityId)
             }
         }
         gameArea.field = []
     }
 
-    function createBlock(row,column){
-        var entityProperties = {
-            width:blockSize,
-            height:blockSize,
-            x:column * blockSize,
-            y:row * blockSize,
 
-            type:Math.floor(Math.random() *  gameArea.maxTypes),// 水果随机产生
-            row:row,
-            column:column
+    function createBlock(row, column, varietyyy) {
+
+        var entityProperties = {
+            width: blockSize,
+            height: blockSize,
+            x: column * blockSize,
+            y: row * blockSize,
+            type: imageSet(varietyyy),
+            row
+            : row,
+            column: column,
+            chances: islucky(row, column)
         }
 
-        var id  =  entityManager.createEntityFromUrlWithProperties(
-                    Qt.resolvedUrl("Block.qml"),entityProperties)
+
+        var id = entityManager.createEntityFromUrlWithProperties(
+                    Qt.resolvedUrl("Block.qml"), entityProperties)
+
 
         var entity = entityManager.getEntityById(id)
         entity.clicked.connect(handleClick)
@@ -73,127 +128,487 @@ Item {
         return entity
     }
 
-    function handleClick(row,column,type){
-        if(!isFieldReadyForNewBlockRemoval())
-            return
-        var fieldCopy = field.slice()
-        var blockCount = getNumberOfConnectedBlocks(fieldCopy,row,column,type)
-        if(blockCount >= 3){
-            removeConnectedBlocks(fieldCopy)
-            //此函数是把高处的块向下移动
-            moveBlocksToBottom()
-            //消去一次的分素
-            var score = blockCount * (blockCount + 1) / 2
-            scene.score +=score
-
-            if(isGameOver())
-                gameOver()
-
-            //增加游戏难度
-
-            gameArea.clicks++
-            if((gameArea.maxTypes < 6) && (gameArea.clicks % 10 == 0))
-                gameArea.maxTypes++
+    function islucky(row, column) {
+        for (var i = 0; i !== 3; i++) {
+            if (lucky[i] === index(row, column))
+                return 1
         }
-
+        return 0
     }
 
-    function isFieldReadyForNewBlockRemoval(){
-        for(var col = 0; col < columns;col++){
-            var block = field[index(0,col)]
-            if(block === null || block.y < 0)
-                return false
+    function imageSet(varietyyyy) {
+        var types = varietyyyy * maxTypes + Math.floor(Math.random(
+                                                           ) * gameArea.types)
+        if (imageNumber[types - varietyyyy * maxTypes] !== 0) {
+            imageNumber[types - varietyyyy * maxTypes]--
+            return types
+        } else {
+            return imageSet(varietyyyy)
+
+
+        }
+    }
+
+
+    function handleClick(row, column, type) {
+
+        var fieldCopy = gameArea.field.slice()
+        link[linkIndex] = index(row, column)
+        if (linkIndex === 0) {
+            if (link[1] !== 99) {
+                if (fieldCopy[link[1]].type === type
+                        && (fieldCopy[link[1]].row !== row
+                            || fieldCopy[link[1]].column !== column)
+                        && checkNoBarrier(fieldCopy[link[1]].row,
+                                          fieldCopy[link[1]].column, row,
+                                          column)) {
+                    if (linelevel !== 0) {
+                        timer.restart()
+                        if (linelevel === 1) {
+                            drawline1(point[0], point[1], point[2], point[3])
+                            rectangle2.opacity = 0
+                            rectangle3.opacity = 0
+                        } else if (linelevel === 2) {
+                            drawline1(point[0], point[1], point[2], point[3])
+                            drawline2(point[4], point[5], point[2], point[3])
+                            rectangle3.opacity = 0
+                        } else {
+                            drawline1(point[0], point[1], point[2], point[3])
+                            drawline2(point[4], point[5], point[2], point[3])
+                            drawline3(point[4], point[5], point[6], point[7])
+                        }
+
+
+
+                        calculatescore(scene.score, linelevel)
+                        pairingSuccess(linelevel)
+
+                        if (fieldCopy[link[0]].chances === 1
+                                || fieldCopy[link[1]].chances === 1)
+                            chance()
+                        var block = gameArea.field[link[0]]
+                        gameArea.field[link[0]] = null
+                        block.remove()
+                        link[0] = 99
+
+                        block = gameArea.field[link[1]]
+                        gameArea.field[link[1]] = null
+                        block.remove()
+                        link[1] = 99
+                    } else
+                        linkIndex = 1
+                } else
+                    linkIndex = 1
+            } else
+                linkIndex = 1
+        } else {
+            if (link[0] !== 99) {
+                if (fieldCopy[link[0]].type === type
+                        && (fieldCopy[link[0]].row !== row
+                            || fieldCopy[link[0]].column !== column)
+                        && checkNoBarrier(fieldCopy[link[0]].row,
+                                          fieldCopy[link[0]].column, row,
+                                          column)) {
+                    if (linelevel !== 0) {
+                        timer.restart()
+                        if (linelevel === 1) {
+                            drawline1(point[0], point[1], point[2], point[3])
+                            rectangle2.opacity = 0
+                            rectangle3.opacity = 0
+                        } else if (linelevel === 2) {
+                            drawline1(point[0], point[1], point[2], point[3])
+                            drawline2(point[4], point[5], point[2], point[3])
+                            rectangle3.opacity = 0
+                        } else {
+                            drawline1(point[0], point[1], point[2], point[3])
+                            drawline2(point[4], point[5], point[2], point[3])
+                            drawline3(point[4], point[5], point[6], point[7])
+                        }
+
+                        gameArea.calculatescore(scene.score, linelevel)
+//                        var score = linelevel * 350
+//                        gameWindow.score +=score
+//                                gamescore.save()
+                        pairingSuccess(linelevel)
+
+
+
+                        if (fieldCopy[link[0]].chances === 1
+                                || fieldCopy[link[1]].chances === 1)
+                            chance()
+                        block = gameArea.field[link[0]]
+                        gameArea.field[link[0]] = null
+                        block.remove()
+                        link[0] = 99
+
+                        block = gameArea.field[link[1]]
+                        gameArea.field[link[1]] = null
+                        block.remove()
+                        link[1] = 99
+
+                    } else
+                        linkIndex = 0
+                } else
+                    linkIndex = 0
+            } else
+                linkIndex = 0
+        }
+
+
+        if (isGameOver())
+            gameOver()
+    }
+
+    function checkNoBarrier(row1, col1, row2, col2) {
+        if (row1 === row2 || col1 === col2) {
+            if (!zeroTurningPoint(row1, col1, row2, col2)) {
+                if (threeTurningPoint(row1, col1, row2, col2)) {
+                    linelevel = 3
+                    return true
+                }
+            } else {
+
+                linelevel = 1
+                point = [row1, col1, row2, col2]
+                return true
+            }
+        } else {
+            if (!twoTurningPoint(row1, col1, row2, col2)) {
+                if (threeTurningPoint(row1, col1, row2, col2)) {
+                    linelevel = 3
+                    return true
+                }
+            } else {
+                linelevel = 2
+                return true
+            }
+        }
+        linelevel = 0
+        return false
+    }
+    function drawline1(row1, col1, row2, col2) {
+        if ((row1 === row2) || (col1 === col2)) {
+            if ((row1 === row2) && (col1 !== col2)) {
+                if (col1 < col2) {
+                    rectangle.width = (col2 - col1) * blockSize
+                    rectangle.height = 1
+                    rectangle.opacity = 1
+                    rectangle.x = col1 * blockSize + blockSize / 2
+                    rectangle.y = row1 * blockSize + blockSize / 2
+                } else {
+                    rectangle.width = (col1 - col2) * blockSize
+                    rectangle.height = 1
+                    rectangle.opacity = 1
+                    rectangle.x = col2 * blockSize + blockSize / 2
+                    rectangle.y = row2 * blockSize + blockSize / 2
+                }
+            }
+            if ((row1 !== row2) && (col1 === col2)) {
+                if (row1 < row2) {
+                    rectangle.width = 1
+                    rectangle.height = (row2 - row1) * blockSize
+                    rectangle.opacity = 1
+                    rectangle.x = col1 * blockSize + blockSize / 2
+                    rectangle.y = row1 * blockSize + blockSize / 2
+                } else {
+                    rectangle.width = 1
+                    rectangle.height = (row1 - row2) * blockSize
+                    rectangle.opacity = 1
+                    rectangle.x = col2 * blockSize + blockSize / 2
+                    rectangle.y = row2 * blockSize + blockSize / 2
+                }
+            }
+        }
+    }
+
+    function drawline2(row1, col1, row2, col2) {
+        if ((row1 === row2) || (col1 === col2)) {
+            if ((row1 === row2) && (col1 !== col2)) {
+                if (col1 < col2) {
+                    rectangle2.width = (col2 - col1) * blockSize
+                    rectangle2.height = 1
+                    rectangle2.opacity = 1
+                    rectangle2.x = col1 * blockSize + blockSize / 2
+                    rectangle2.y = row1 * blockSize + blockSize / 2
+                } else {
+                    rectangle2.width = (col1 - col2) * blockSize
+                    rectangle2.height = 1
+                    rectangle2.opacity = 1
+                    rectangle2.x = col2 * blockSize + blockSize / 2
+                    rectangle2.y = row2 * blockSize + blockSize / 2
+                }
+            }
+            if ((row1 !== row2) && (col1 === col2)) {
+                if (row1 < row2) {
+                    rectangle2.width = 1
+                    rectangle2.height = (row2 - row1) * blockSize
+                    rectangle2.opacity = 1
+                    rectangle2.x = col1 * blockSize + blockSize / 2
+                    rectangle2.y = row1 * blockSize + blockSize / 2
+                } else {
+                    rectangle2.width = 1
+                    rectangle2.height = (row1 - row2) * blockSize
+                    rectangle2.opacity = 1
+                    rectangle2.x = col2 * blockSize + blockSize / 2
+                    rectangle2.y = row2 * blockSize + blockSize / 2
+                }
+            }
+        }
+    }
+    function drawline3(row1, col1, row2, col2) {
+        if ((row1 === row2) || (col1 === col2)) {
+            if ((row1 === row2) && (col1 !== col2)) {
+                if (col1 < col2) {
+                    rectangle3.width = (col2 - col1) * blockSize
+                    rectangle3.height = 1
+                    rectangle3.opacity = 1
+                    rectangle3.x = col1 * blockSize + blockSize / 2
+                    rectangle3.y = row1 * blockSize + blockSize / 2
+                } else {
+                    rectangle3.width = (col1 - col2) * blockSize
+                    rectangle3.height = 1
+                    rectangle3.opacity = 1
+                    rectangle3.x = col2 * blockSize + blockSize / 2
+                    rectangle3.y = row2 * blockSize + blockSize / 2
+                }
+            }
+            if ((row1 !== row2) && (col1 === col2)) {
+                if (row1 < row2) {
+                    rectangle3.width = 1
+                    rectangle3.height = (row2 - row1) * blockSize
+                    rectangle3.opacity = 1
+                    rectangle3.x = col1 * blockSize + blockSize / 2
+                    rectangle3.y = row1 * blockSize + blockSize / 2
+                } else {
+                    rectangle3.width = 1
+                    rectangle3.height = (row1 - row2) * blockSize
+                    rectangle3.opacity = 1
+                    rectangle3.x = col2 * blockSize + blockSize / 2
+                    rectangle3.y = row2 * blockSize + blockSize / 2
+                }
+            }
+        }
+    }
+
+
+    function twoTurningPoint(row1, col1, row2, col2) {
+
+        if (((zeroTurningPoint(row1, col1, row1, col2))
+             && (zeroTurningPoint(row1, col2, row2,
+                                  col2)) && (gameArea.field[index(
+                                                                row1, col2)] === null))) {
+            point = [row1, col1, row1, col2, row2, col2]
+            return true
+        } else if (((zeroTurningPoint(row1, col1, row2, col1))
+                    && (zeroTurningPoint(row2, col1, row2,
+                                         col2)) && (gameArea.field[index(
+                                                                       row2, col1)] === null))) {
+            point = [row1, col1, row2, col1, row2, col2]
+            return true
+        }
+
+        return false
+    }
+
+
+    function threeTurningPoint(row1, col1, row2, col2) {
+        for (var i = row1 + 1; i < rows && i >= 0
+             && gameArea.field[index(i, col1)] === null; i++) {
+            for (var a = row2 + 1; a < rows && a >= 0
+                 && gameArea.field[index(a, col2)] === null; a++) {
+                if (zeroTurningPoint(i, col1, a, col2)) {
+                    point = [row1, col1, i, col1, a, col2, row2, col2]
+                    return true
+                }
+            }
+            for (var b = row2 - 1; b < rows && b >= 0
+                 && gameArea.field[index(b, col2)] === null; b--) {
+                if (zeroTurningPoint(i, col1, b, col2)) {
+                    point = [row1, col1, i, col1, b, col2, row2, col2]
+                    return true
+                }
+            }
+            for (var c = col2 + 1; c < columns && c >= 0
+                 && gameArea.field[index(row2, c)] === null; c++) {
+                if (zeroTurningPoint(i, col1, row2, c)) {
+                    return true
+                }
+            }
+            for (var d = col2 - 1; d < columns && d >= 0
+                 && gameArea.field[index(row2, d)] === null; d--) {
+                if (zeroTurningPoint(i, col1, row2, d))
+                    return true
+            }
+        }
+
+        for (i = row1 - 1; i < rows && i >= 0
+             && gameArea.field[index(i, col1)] === null; i--) {
+            for (a = row2 + 1; a < rows && a >= 0
+                 && gameArea.field[index(a, col2)] === null; a++) {
+                if (zeroTurningPoint(i, col1, a, col2)) {
+                    point = [row1, col1, i, col1, a, col2, row2, col2]
+                    return true
+                }
+            }
+            for (b = row2 - 1; b < rows && b >= 0
+                 && gameArea.field[index(b, col2)] === null; b--) {
+                if (zeroTurningPoint(i, col1, b, col2)) {
+                    point = [row1, col1, i, col1, b, col2, row2, col2]
+                    return true
+                }
+            }
+            for (c = col2 + 1; c < columns && c >= 0
+                 && gameArea.field[index(row2, c)] === null; c++) {
+                if (zeroTurningPoint(i, col1, row2, c))
+                    return true
+            }
+            for (d = col2 - 1; d < columns && d >= 0
+                 && gameArea.field[index(row2, d)] === null; d--) {
+                if (zeroTurningPoint(i, col1, row2, d))
+                    return true
+            }
+        }
+
+        for (i = col1 - 1; i < columns && i >= 0
+             && gameArea.field[index(row1, i)] === null; i--) {
+            for (a = row2 + 1; a < rows && a >= 0
+                 && gameArea.field[index(a, col2)] === null; a++) {
+                if (zeroTurningPoint(row1, i, a, col2))
+                    return true
+            }
+            for (b = row2 - 1; b < rows && b >= 0
+                 && gameArea.field[index(b, col2)] === null; b--) {
+                if (zeroTurningPoint(row1, i, b, col2))
+                    return true
+            }
+            for (c = col2 + 1; c < columns && c >= 0
+                 && gameArea.field[index(row2, c)] === null; c++) {
+                if (zeroTurningPoint(row1, i, row2, c)) {
+                    point = [row1, col1, row1, i, row2, c, row2, col2]
+                    return true
+                }
+            }
+            for (d = col2 - 1; d < columns && d >= 0
+                 && gameArea.field[index(row2, d)] === null; d--) {
+                if (zeroTurningPoint(row1, i, row2, d)) {
+                    point = [row1, col1, row1, i, row2, d, row2, col2]
+                    return true
+                }
+            }
+        }
+
+        for (i = col1 + 1; i < columns && i >= 0
+             && gameArea.field[index(row1, i)] === null; i++) {
+            for (a = row2 + 1; a < rows && a >= 0
+                 && gameArea.field[index(a, col2)] === null; a++) {
+                if (zeroTurningPoint(row1, i, a, col2)) {
+                    return true
+                }
+            }
+            for (b = row2 - 1; b < rows && b >= 0
+                 && gameArea.field[index(b, col2)] === null; b--) {
+                if (zeroTurningPoint(row1, i, b, col2))
+                    return true
+            }
+            for (c = col2 + 1; c < columns && c >= 0
+                 && gameArea.field[index(row2, c)] === null; c++) {
+                if (zeroTurningPoint(row1, i, row2, c)) {
+                    point = [row1, col1, row1, i, row2, c, row2, col2]
+                    return true
+                }
+            }
+            for (d = col2 - 1; d < columns && d >= 0
+                 && gameArea.field[index(row2, d)] === null; d--) {
+                if (zeroTurningPoint(row1, i, row2, d)) {
+                    point = [row1, col1, row1, i, row2, d, row2, col2]
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+
+    function zeroTurningPoint(row1, col1, row2, col2) {
+        if (row1 === row2) {
+            if (col1 < col2) {
+                for (var i = col1 + 1; i < col2; i++) {
+                    if (gameArea.field[index(row1, i)] !== null) {
+                        return false
+                    }
+                }
+            } else {
+                for (var n = col2 + 1; n < col1; n++) {
+                    if (gameArea.field[index(row1, n)] !== null)
+                        return false
+                }
+            }
+        } else if (col1 === col2) {
+            if (row1 < row2) {
+                for (var j = row1 + 1; j < row2; j++) {
+                    if (gameArea.field[index(j, col1)] !== null)
+                        return false
+                }
+            } else {
+                for (var m = row2 + 1; m < row1; m++) {
+                    if (gameArea.field[index(m, col1)] !== null)
+                        return false
+                }
+            }
+        } else {
+            return false
         }
 
         return true
     }
 
-    //检查游戏是否结束
-    function isGameOver(){
-        var gameOver = true
 
-        var fieldCopy = field.slice()
-
-        for(var row = 0; row < rows;row++){
-            for(var col = 0;col < columns;col++){
-                var block = fieldCopy[index(row,col)]
-                if(block !== null){
-                var blockCount = getNumberOfConnectedBlocks(fieldCopy,row,col,block.type)
-
-                if(blockCount >= 3){
-                    gameOver = false
-                    break
-                    }
-                }
-            }
-        }
-        return gameOver
-    }
-
-
-    function moveBlocksToBottom(){
-        for(var col = 0; col < columns;col++){
-            for(var row = rows - 1;row >= 0;row--){
-                if(gameArea.field[index(row,col)] === null){
-                    var moveBlock = null
-                    for( var moveRow = row - 1;moveRow >= 0;moveRow--){
-                        moveBlock = gameArea.field[index(moveRow,col)]
-
-                        if(moveBlock !== null){
-                            gameArea.field[index(moveRow,col)] = null
-                            gameArea.field[index(row,col)] = moveBlock
-                            moveBlock.row = row
-                            moveBlock.y = row *gameArea.blockSize
-                            break
+    function isGameOver() {
+        var fieldCopy = gameArea.field.slice()
+        for (var row = 0; row < rows; row++) {
+            for (var col = 0; col < columns; col++) {
+                if (fieldCopy[index(row, col)] !== null) {
+                    console.log(row, col)
+                    for (var row1 = row; row1 < rows; row1++) {
+                        for (var col1 = col + 1; col1 < columns; col1++) {
+                            if (fieldCopy[index(row1, col1)] !== null
+                                    && (fieldCopy[index(row, col)].type
+                                        === fieldCopy[index(row1,
+                                                            col1)].type)) {
+                                if (checkNoBarrier(row, col, row1, col1)) {
+                                    chanceLink = [row, col, row1, col1]
+                                    return false
+                                }
+                            }
                         }
                     }
-                    if(moveBlock === null){
-                        for(var newRow = row;newRow >= 0;newRow--){
-                            var newBlock = createBlock(newRow,col)
-                            gameArea.field[index(newRow,col)] = newBlock
-                            newBlock.row = newRow
-                            newBlock.y = newRow * gameArea.blockSize
-                        }
-                        break
-                    }
                 }
             }
         }
+
+        return true
     }
 
-    //返回需要消去水果块数
-    //实现的是消去水果的逻辑
-    function getNumberOfConnectedBlocks(fieldCopy,row,column,type){
-        if(row >= rows || column >= columns || row < 0 || column < 0)
-            return 0
-        var block= fieldCopy[index(row,column)]
-
-        if(block === null)
-            return 0
-        if(block.type !==type)
-            return 0
-        var count = 1
-
-        fieldCopy[index(row,column)] = null
-
-        count += getNumberOfConnectedBlocks(fieldCopy,row + 1,column,type)
-        count += getNumberOfConnectedBlocks(fieldCopy,row,column + 1,type)
-        count +=getNumberOfConnectedBlocks(fieldCopy,row - 1,column,type)
-        count +=getNumberOfConnectedBlocks(fieldCopy,row,column - 1,type)
-
-        return count
-    }
-
-    function removeConnectedBlocks(fieldCopy){
-        for(var i = 0;i < fieldCopy.length;i++){
-            if(fieldCopy[i] === null){
-                var block = gameArea.field[i]
-                if(block !== null){
-                    gameArea.field[i] = null
-                    entityManager.removeEntityById(block.entityId)
-                }
-            }
+    function removeChanceLink() {
+        var block = gameArea.field[index(chanceLink[0], chanceLink[1])]
+        gameArea.field[index(chanceLink[0], chanceLink[1])] = null
+        block.remove()
+        block = gameArea.field[index(chanceLink[2], chanceLink[3])]
+        gameArea.field[index(chanceLink[2], chanceLink[3])] = null
+        block.remove()
+        if (linelevel === 1) {
+            drawline1(point[0], point[1], point[2], point[3])
+            rectangle2.opacity = 0
+            rectangle3.opacity = 0
+        } else if (linelevel === 2) {
+            drawline1(point[0], point[1], point[2], point[3])
+            drawline2(point[4], point[5], point[2], point[3])
+            rectangle3.opacity = 0
+        } else {
+            drawline1(point[0], point[1], point[2], point[3])
+            drawline2(point[4], point[5], point[2], point[3])
+            drawline3(point[4], point[5], point[6], point[7])
         }
     }
-
 }
